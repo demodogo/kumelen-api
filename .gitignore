@@ -35,3 +35,8 @@ lerna-debug.log*
 
 prisma/generated/*
 AGENTS.md
+
+.dist/
+dist/*
+build/
+coverage/

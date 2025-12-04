@@ -5,12 +5,14 @@ import { env } from './config/env.js';
 import { apiRouter } from './routes/index.js';
 import { requestLogger } from './middleware/logger.js';
 import { serve } from '@hono/node-server';
+import { errorHandler } from './middleware/errorHandler.js';
 
 export const app = new Hono();
 
 app.use('*', requestLogger);
 app.use('*', cors());
 app.use('*', secureHeaders());
+app.onError(errorHandler);
 
 app.get('/health', (c) => {
   return c.json({ status: 'ok', env: env.NODE_ENV });

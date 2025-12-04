@@ -26,10 +26,13 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test
+        run: npm run test
+
       - name: Log success
         if: success()
         run: |
-          echo "✅ CI completado: instalación, generación de Prisma y build OK"
+          echo "✅ CI completado: instalación y build OK"
 
       - name: Log failure
         if: failure()

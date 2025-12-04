@@ -7,7 +7,8 @@
     "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "types": [
-      "node"
+      "node",
+      "vitest"
     ],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
@@ -16,5 +17,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "include": ["src", "vitest.config.ts"]
 }

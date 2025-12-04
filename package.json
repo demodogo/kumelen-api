@@ -9,11 +9,17 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "vitest",
+    "test:ui": "vitest --ui"
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
       "prettier --write"
+    ],
+    "src/**/*.ts": [
+      "npm test --silent -- --run",
+      "git add ."
     ]
   },
   "dependencies": {
@@ -28,10 +34,13 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
+    "@vitest/coverage-v8": "^4.0.15",
+    "@vitest/ui": "^4.0.15",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prisma": "^6.2.0",
     "tsx": "^4.7.1",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.15"
   }
 }

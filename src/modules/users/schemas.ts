@@ -16,6 +16,3 @@ export const updateUserSchema = createUserSchema
     role: true,
   })
   .partial();
-
-export type CreateUserInput = z.infer<typeof createUserSchema>;
-export type UpdateUserInput = z.infer<typeof updateUserSchema>;

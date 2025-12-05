@@ -1,4 +1,4 @@
-import type { CreateUserInput, UpdateUserInput } from './schemas.js';
+import type { CreateUserInput, UpdateUserInput } from './types.js';
 import { sanitizeUser } from './helpers.js';
 import { usersRepository } from './repository.js';
 import { UserError } from './errors.js';

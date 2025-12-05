@@ -1,5 +1,5 @@
 import { prisma } from '../../db/prisma.js';
-import type { CreateUserInput, UpdateUserInput } from './schemas.js';
+import type { CreateUserInput, UpdateUserInput } from './types.js';
 
 export const usersRepository = {
   findByUsername(username: string) {

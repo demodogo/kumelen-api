@@ -95,6 +95,9 @@ categoriesRouter.delete('/:id', authMiddleware, hasRole([Role.admin]), async (c)
     console.log(result);
     return c.json({ result }, 200);
   } catch (error) {
+    if (error instanceof AppError) {
+      return c.json({ message: error.message, code: error.code }, error.statusCode as any);
+    }
     return c.json({ message: 'Internal server error' }, 500);
   }
 });

@@ -43,7 +43,10 @@ export async function updateCategory(id: string, data: UpdateCategoryInput) {
 
   // Check for conflicts with other categories
   if (data.name || data.slug) {
-    const existing = await categoriesRepository.findBySlugOrName(data.name ?? '', data.slug ?? '');
+    const existing = await categoriesRepository.findBySlugOrName(
+      data.name ?? category.name,
+      data.slug ?? category.slug
+    );
     if (existing && existing.id !== id) {
       throw new ConflictError('Category');
     }

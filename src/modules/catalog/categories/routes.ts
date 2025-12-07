@@ -92,7 +92,6 @@ categoriesRouter.delete('/:id', authMiddleware, hasRole([Role.admin]), async (c)
   try {
     const id = c.req.param('id');
     const result = await deleteCategory(id);
-    console.log(result);
     return c.json({ result }, 200);
   } catch (error) {
     if (error instanceof AppError) {

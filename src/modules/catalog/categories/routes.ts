@@ -83,7 +83,7 @@ categoriesRouter.patch(
       if (error instanceof AppError) {
         return c.json({ message: error.message, code: error.code }, error.statusCode as any);
       }
-      return c.json({ message: 'Internal server error ' }, 500);
+      return c.json({ message: 'Internal server error' }, 500);
     }
   }
 );

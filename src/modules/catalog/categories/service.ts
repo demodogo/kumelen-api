@@ -40,6 +40,21 @@ export async function updateCategory(id: string, data: UpdateCategoryInput) {
   if (!category) {
     throw new NotFoundError('Category');
   }
+
+  // Check for conflicts with other categories
+  if (data.name) {
+    const existingByName = await categoriesRepository.findByName(data.name);
+    if (existingByName && existingByName.id !== id) {
+      throw new ConflictError('Category');
+    }
+  }
+  if (data.slug) {
+    const existingBySlug = await categoriesRepository.findBySlug(data.slug);
+    if (existingBySlug && existingBySlug.id !== id) {
+      throw new ConflictError('Category');
+    }
+  }
+
   const updated = await categoriesRepository.update(id, data);
   if (!updated) {
     throw new InternalServerError('Could not update category');

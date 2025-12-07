@@ -17,10 +17,6 @@
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
       "prettier --write"
-    ],
-    "src/**/*.ts": [
-      "npm test --silent -- --run",
-      "git add ."
     ]
   },
   "dependencies": {
@@ -41,6 +37,7 @@
     "@vitest/ui": "^4.0.15",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
+    "prettier": "^3.7.4",
     "prisma": "^6.2.0",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3",

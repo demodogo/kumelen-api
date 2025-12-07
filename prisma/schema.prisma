@@ -54,10 +54,11 @@ model Category {
 
 model Product {
   id String @id @default(cuid())
-  name String
-  sku String @unique
+  name String @unique
+  sku String @default(uuid()) @unique
   slug String @unique
-  description String?
+  shortDesc String?
+  longDesc String?
   price Int
   cost Int
   stock Int @default(0)
@@ -79,7 +80,8 @@ model Service {
   code String @unique
   name String
   slug String @unique
-  description String?
+  long_desc String?
+  short_desc String?
   price Int
   cost Int
   durationMinutes Int

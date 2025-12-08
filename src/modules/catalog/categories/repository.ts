@@ -18,13 +18,12 @@ export const categoriesRepository = {
     });
   },
 
-  createCategory(authedId: string, data: CreateCategoryInput) {
+  createCategory(data: CreateCategoryInput) {
     return prisma.category.create({
       data: {
         name: data.name,
         slug: data.slug,
         description: data.description ?? null,
-        createdById: authedId,
       },
     });
   },

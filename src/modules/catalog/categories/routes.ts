@@ -77,7 +77,8 @@ categoriesRouter.patch(
     try {
       const id = c.req.param('id');
       const data = c.req.valid('json');
-      const category = await updateCategory(id, data);
+      const authed = c.get('user');
+      const category = await updateCategory(authed.sub, id, data);
       return c.json({ category }, 200);
     } catch (error) {
       if (error instanceof AppError) {
@@ -91,7 +92,8 @@ categoriesRouter.patch(
 categoriesRouter.delete('/:id', authMiddleware, hasRole([Role.admin]), async (c) => {
   try {
     const id = c.req.param('id');
-    const result = await deleteCategory(id);
+    const authed = c.get('user');
+    const result = await deleteCategory(authed.sub, id);
     return c.json({ result }, 200);
   } catch (error) {
     if (error instanceof AppError) {

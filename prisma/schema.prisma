@@ -19,6 +19,39 @@ enum Role {
   user
 }
 
+enum LogAction {
+  CREATE
+  UPDATE
+  DELETE
+  LOGIN
+  LOGOUT
+}
+
+enum EntityType {
+  USER
+  PRODUCT
+  SERVICE
+  SALE
+  CUSTOMER
+  POS_SESSION
+  CATEGORY
+  AUTH
+  BLOG
+}
+
+model AppLogs {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    EntityType
+  entityId  String?
+  details   String?
+  timestamp DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+  @@map("app_logs")
+}
+
 model User {
   id           String   @id @default(cuid())
   username     String   @unique
@@ -29,10 +62,10 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  createdCategories Category[]
   posSessions PosSession[] @relation("openedBy")
 
   @@map("users")
+  appLogs AppLogs[]
 }
 
 model Category {
@@ -40,11 +73,9 @@ model Category {
   name String @unique
   slug String @unique
   description String?
-  createdById String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  createdBy User @relation(fields: [createdById], references: [id])
 
   products Product[]
   services Service[]
@@ -103,14 +134,14 @@ model PosSession {
   closedAt DateTime?
   initialCash Int
   finalCash Int?
-  openedById String
   status SessionStatus
   notes String?
+  openedById String
 
-  openedBy User @relation("openedBy", fields: [openedById], references: [id])
-  sales Sale[]
 
   @@map("pos_sessions")
+  sales Sale[]
+  user User[] @relation("openedBy")
 }
 
 enum SessionStatus{

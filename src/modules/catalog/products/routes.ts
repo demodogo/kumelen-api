@@ -24,10 +24,10 @@ productsRouter.post(
   async (c) => {
     const data = c.req.valid('json');
     try {
-      const product = await createProduct(data);
+      const authed = c.get('user');
+      const product = await createProduct(authed.sub, data);
       return c.json({ product }, 201);
     } catch (error) {
-      console.log(error);
       if (error instanceof AppError) {
         return c.json({ message: error.message, code: error.code }, error.statusCode as any);
       }
@@ -84,7 +84,8 @@ productsRouter.patch(
     try {
       const id = c.req.param('id');
       const data = c.req.valid('json');
-      const product = await updateProduct(id, data);
+      const authed = c.get('user');
+      const product = await updateProduct(authed.sub, id, data);
       return c.json({ product }, 200);
     } catch (error) {
       if (error instanceof AppError) {
@@ -98,7 +99,8 @@ productsRouter.patch(
 productsRouter.delete('/:id', authMiddleware, hasRole([Role.admin]), async (c) => {
   try {
     const id = c.req.param('id');
-    const result = await deleteProduct(id);
+    const authed = c.get('user');
+    const result = await deleteProduct(authed.sub, id);
     return c.json({ result }, 200);
   } catch (error) {
     if (error instanceof AppError) {

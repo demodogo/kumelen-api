@@ -1,6 +1,8 @@
 import type { CreateProductInput, ProductListQuery, UpdateProductInput } from './types.js';
 import { productsRepository } from './repository.js';
 import { ConflictError, InternalServerError } from '../../../shared/errors/app-errors.js';
+import { appLogsRepository } from '../../logs/repository.js';
+import { EntityType, LogAction } from '@prisma/client';
 
 export async function listProducts(query: ProductListQuery) {
   const { page, pageSize, search, categoryId, isPublic } = query;
@@ -37,7 +39,7 @@ export async function getProductBySlug(slug: string) {
   return productsRepository.findBySlug(slug);
 }
 
-export async function createProduct(data: CreateProductInput) {
+export async function createProduct(authedId: string, data: CreateProductInput) {
   const existingSlug = await productsRepository.findBySlug(data.slug);
   const existingName = await productsRepository.findByName(data.name);
   if (existingName || existingSlug) {
@@ -47,13 +49,39 @@ export async function createProduct(data: CreateProductInput) {
   if (!product) {
     throw new InternalServerError();
   }
+  await appLogsRepository.createLog({
+    userId: authedId,
+    entity: EntityType.PRODUCT,
+    entityId: product.id,
+    action: LogAction.CREATE,
+  });
   return product;
 }
 
-export async function updateProduct(id: string, data: UpdateProductInput) {
-  return productsRepository.update(id, data);
+export async function updateProduct(authedId: string, id: string, data: UpdateProductInput) {
+  const product = await productsRepository.update(id, data);
+  if (!product) {
+    throw new InternalServerError();
+  }
+  await appLogsRepository.createLog({
+    userId: authedId,
+    entity: EntityType.PRODUCT,
+    entityId: product.id,
+    action: LogAction.UPDATE,
+  });
 }
 
-export async function deleteProduct(id: string): Promise<void> {
+export async function deleteProduct(authedId: string, id: string): Promise<void> {
+  const product = await productsRepository.findById(id);
+  if (!product) {
+    throw new InternalServerError();
+  }
   await productsRepository.delete(id);
+  await appLogsRepository.createLog({
+    userId: authedId,
+    entity: EntityType.PRODUCT,
+    entityId: product.id,
+    action: LogAction.DELETE,
+  });
+  return;
 }

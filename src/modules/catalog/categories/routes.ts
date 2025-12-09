@@ -37,8 +37,13 @@ categoriesRouter.get(
   zValidator('query', getCategoriesQuerySchema),
   async (c) => {
     try {
-      const includeCatalog = c.req.valid('query')['include-catalog'] ?? false;
-      const categories = await getAll(includeCatalog);
+      const { include } = c.req.valid('query');
+
+      const includeOptions = {
+        services: include === 'services' || include === 'all',
+        products: include === 'products' || include === 'all',
+      };
+      const categories = await getAll(includeOptions);
       return c.json({ categories }, 200);
     } catch (error) {
       if (error instanceof AppError) {
@@ -56,8 +61,13 @@ categoriesRouter.get(
   async (c) => {
     try {
       const id = c.req.param('id');
-      const includeCatalog = c.req.valid('query')['include-catalog'] ?? false;
-      const category = await getById(id, includeCatalog);
+      const { include } = c.req.valid('query');
+
+      const includeOptions = {
+        services: include === 'services' || include === 'all',
+        products: include === 'products' || include === 'all',
+      };
+      const category = await getById(id, includeOptions);
       return c.json({ category }, 200);
     } catch (error) {
       if (error instanceof AppError) {

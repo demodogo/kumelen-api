@@ -69,6 +69,7 @@ export async function updateProduct(authedId: string, id: string, data: UpdatePr
     entityId: product.id,
     action: LogAction.UPDATE,
   });
+  return product;
 }
 
 export async function deleteProduct(authedId: string, id: string): Promise<void> {
@@ -83,5 +84,4 @@ export async function deleteProduct(authedId: string, id: string): Promise<void>
     entityId: product.id,
     action: LogAction.DELETE,
   });
-  return;
 }

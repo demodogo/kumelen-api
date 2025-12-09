@@ -1,33 +1,32 @@
-import type { CreateProductInput, FindManyArgs, UpdateProductInput } from './types.js';
-import type { Product } from '@prisma/client';
+import type { CreateServiceInput, FindManyArgs, UpdateServiceInput } from './types.js';
+import type { Service } from '@prisma/client';
 import { buildWhere } from './helpers.js';
-import { prisma } from '../../../db/prisma.js';
+import { prisma } from 'src/db/prisma.js';
 import { categoriesRepository } from '../categories/repository.js';
 import { ConflictError } from '../../../shared/errors/app-errors.js';
 
-export const productsRepository = {
-  async findManyWithCount(args: FindManyArgs): Promise<[Product[], number]> {
+export const servicesRepository = {
+  async findManyWithCount(args: FindManyArgs): Promise<[Service[], number]> {
     const { search, categoryId, isPublic, skip, take } = args;
     const where = buildWhere({ search, categoryId, isPublic });
-
     const [items, total] = await Promise.all([
-      prisma.product.findMany({
+      prisma.service.findMany({
         where,
         skip,
         take,
         orderBy: { updatedAt: 'desc' },
       }),
-      prisma.product.count({ where }),
+      prisma.service.count({ where }),
     ]);
 
-    return [items as Product[], total];
+    return [items as Service[], total];
   },
 
   findById(id: string) {
-    return prisma.product.findUnique({ where: { id } });
+    return prisma.service.findUnique({ where: { id } });
   },
 
-  async create(data: CreateProductInput) {
+  async create(data: CreateServiceInput) {
     let category;
     if (data.categoryId) {
       category = await categoriesRepository.findById(data.categoryId);
@@ -38,38 +37,38 @@ export const productsRepository = {
       throw new ConflictError('Conflict with Category FK');
     }
     const withCategoryData = { ...data, categoryId: category.id };
-    return prisma.product.create({
+    return prisma.service.create({
       data: withCategoryData,
     });
   },
 
-  findBySlug(slug: string) {
-    return prisma.product.findUnique({ where: { slug } });
-  },
-
-  findByName(name: string) {
-    return prisma.product.findUnique({ where: { name } });
-  },
-
-  update(id: string, data: UpdateProductInput) {
-    return prisma.product.update({
+  update(id: string, data: UpdateServiceInput) {
+    return prisma.service.update({
       where: { id },
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.slug !== undefined && { slug: data.slug }),
-        ...(data.shortDesc !== undefined && { shortDesc: data.shortDesc }),
-        ...(data.longDesc !== undefined && { longDesc: data.longDesc }),
+        ...(data.shortDesc !== undefined && { short_desc: data.shortDesc }),
+        ...(data.longDesc !== undefined && { long_desc: data.longDesc }),
         ...(data.price !== undefined && { price: data.price }),
         ...(data.cost !== undefined && { cost: data.cost }),
-        ...(data.minStock !== undefined && { minStock: data.minStock }),
-        ...(data.isPublished !== undefined && { is_public: data.isPublished }),
-        ...(data.stock !== undefined && { stock: data.stock }),
+        ...(data.durationMinutes !== undefined && { durationMinutes: data.durationMinutes }),
+        ...(data.isActive !== undefined && { isActive: data.isActive }),
+        ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
         ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
       },
     });
   },
 
   delete(id: string) {
-    return prisma.product.delete({ where: { id } });
+    return prisma.service.delete({ where: { id } });
+  },
+
+  findByName(name: string) {
+    return prisma.service.findUnique({ where: { name } });
+  },
+
+  findBySlug(slug: string) {
+    return prisma.service.findUnique({ where: { slug } });
   },
 };

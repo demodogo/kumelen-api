@@ -1,23 +1,22 @@
 import { z } from 'zod';
-import { createProductSchema, productListQuerySchema, updateProductSchema } from './schemas.js';
+import { type createServiceSchema, serviceListQuerySchema, updateServiceSchema } from './schema.js';
 
-export type CreateProductInput = z.infer<typeof createProductSchema>;
-export type UpdateProductInput = z.infer<typeof updateProductSchema>;
-export type ProductListQuery = z.infer<typeof productListQuerySchema>;
+export type CreateServiceInput = z.infer<typeof createServiceSchema>;
+export type UpdateServiceInput = z.infer<typeof updateServiceSchema>;
+export type ServiceListQuery = z.infer<typeof serviceListQuerySchema>;
 
-export type Product = {
+export type Service = {
   id: string;
   name: string;
   slug: string;
+  code: string;
   longDesc?: string;
   shortDesc?: string;
   price: number;
   cost: number;
-  minStock: number;
   isActive: boolean;
   isPublished: boolean;
-  stock: number;
-  sku?: string;
+  durationMinutes: number;
   categoryId: string;
   created_at: Date;
   updated_at: Date;

@@ -9,5 +9,5 @@ export const createCategorySchema = z.object({
 export const updateCategorySchema = createCategorySchema.partial();
 
 export const getCategoriesQuerySchema = z.object({
-  'include-catalog': z.coerce.boolean().default(false).optional(),
+  include: z.enum(['services', 'products', 'all']).optional(),
 });

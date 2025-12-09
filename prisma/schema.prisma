@@ -108,11 +108,11 @@ model Product {
 
 model Service {
   id String @id @default(cuid())
-  code String @unique
-  name String
+  code String @unique @default(uuid())
+  name String @unique
   slug String @unique
-  long_desc String?
-  short_desc String?
+  longDesc String?
+  shortDesc String?
   price Int
   cost Int
   durationMinutes Int
@@ -207,4 +207,22 @@ model SaleItem {
   service Service? @relation(fields: [serviceId], references: [id])
 
   @@map("sale_items")
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+model Media {
+  id String @id @default(cuid())
+  alt String?
+  url String
+  type MediaType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("media")
 }

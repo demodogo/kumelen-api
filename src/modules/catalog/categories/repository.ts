@@ -28,22 +28,24 @@ export const categoriesRepository = {
     });
   },
 
-  findAll(includeCatalog: boolean) {
-    const include = includeCatalog
-      ? {
-          products: true,
-          services: true,
-        }
-      : {};
+  findAll(includeOptions?: { services: boolean; products: boolean }) {
     return prisma.category.findMany({
-      include,
-      orderBy: { name: 'asc' },
+      include: {
+        services: includeOptions?.services ?? false,
+        products: includeOptions?.services ?? false,
+      },
+      orderBy: { updatedAt: 'asc' },
     });
   },
 
-  findById(id: string, includeCatalog: boolean = false) {
-    const include = includeCatalog ? { products: true, services: true } : {};
-    return prisma.category.findUnique({ where: { id }, include });
+  findById(id: string, includeOptions?: { services: boolean; products: boolean }) {
+    return prisma.category.findUnique({
+      where: { id },
+      include: {
+        services: includeOptions?.services ?? false,
+        products: includeOptions?.services ?? false,
+      },
+    });
   },
 
   update(id: string, data: UpdateCategoryInput) {

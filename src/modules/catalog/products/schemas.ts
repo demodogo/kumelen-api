@@ -30,12 +30,12 @@ export const productMediaParamsSchema = z.object({
 });
 
 export const productIdParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
 });
 
 export const productListQuerySchema = z.object({
   search: z.string().optional(),
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.string().optional(),
   isPublic: z
     .enum(['true', 'false'])
     .optional()

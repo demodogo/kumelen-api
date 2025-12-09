@@ -6,36 +6,33 @@ import { categoriesRepository } from '../categories/repository.js';
 import { ConflictError } from '../../../shared/errors/app-errors.js';
 
 export const servicesRepository = {
-  async findManyWithCount(args: FindManyArgs): Promise<[Service[], number]> {
+  async findMany(args: FindManyArgs): Promise<[Service[], number]> {
     const { search, categoryId, isPublic, skip, take } = args;
     const where = buildWhere({ search, categoryId, isPublic });
-    const [items, total] = await Promise.all([
-      prisma.service.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { updatedAt: 'desc' },
-        include: {
-          mediaFiles: {
-            include: {
-              media: {
-                select: {
-                  id: true,
-                  url: true,
-                  alt: true,
-                },
+    const items = await prisma.service.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        mediaFiles: {
+          include: {
+            media: {
+              select: {
+                id: true,
+                url: true,
+                alt: true,
               },
             },
           },
         },
-      }),
-      prisma.service.count({ where }),
-    ]);
-    const itemsWithSortedMedia = items.map((item) => ({
+      },
+    });
+
+    return items.map((item) => ({
       ...item,
       mediaFiles: item.mediaFiles.sort((a, b) => b.orderIndex - a.orderIndex),
     }));
-    return [itemsWithSortedMedia as Service[], total];
   },
 
   findById(id: string) {

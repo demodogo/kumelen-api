@@ -10,25 +10,13 @@ export async function listProducts(query: ProductListQuery) {
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
-  const [items, total] = await productsRepository.findManyWithCount({
+  return await productsRepository.findMany({
     search,
     categoryId,
     isPublic,
     skip,
     take,
   });
-
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  return {
-    items,
-    pagination: {
-      page,
-      pageSize,
-      total,
-      totalPages,
-    },
-  };
 }
 
 export async function getProductById(id: string) {

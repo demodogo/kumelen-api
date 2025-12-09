@@ -53,6 +53,7 @@ servicesRouter.get('', authMiddleware, zValidator('query', serviceListQuerySchem
     const services = await listServices(query);
     return c.json({ services }, 200);
   } catch (error) {
+    console.log(error);
     if (error instanceof AppError) {
       return c.json({ message: error.message, code: error.code }, error.statusCode as any);
     }

@@ -54,6 +54,7 @@ productsRouter.get('', authMiddleware, zValidator('query', productListQuerySchem
     const products = await listProducts(query);
     return c.json({ products }, 200);
   } catch (error) {
+    console.log('error:', error);
     if (error instanceof AppError) {
       return c.json({ message: error.message, code: error.code }, error.statusCode as any);
     }

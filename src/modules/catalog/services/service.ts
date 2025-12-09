@@ -9,25 +9,13 @@ export async function listServices(query: ServiceListQuery) {
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
-  const [items, total] = await servicesRepository.findManyWithCount({
+  return await servicesRepository.findMany({
     search,
     categoryId,
     isPublic,
     skip,
     take,
   });
-
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  return {
-    items,
-    pagination: {
-      page,
-      pageSize,
-      total,
-      totalPages,
-    },
-  };
 }
 
 export async function getServiceById(id: string) {

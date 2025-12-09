@@ -30,12 +30,12 @@ export const serviceMediaParamsSchema = z.object({
 });
 
 export const serviceIdParamSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string(),
 });
 
 export const serviceListQuerySchema = z.object({
   search: z.string().optional(),
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.string().optional(),
   isPublic: z
     .enum(['true', 'false'])
     .optional()

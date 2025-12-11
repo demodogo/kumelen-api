@@ -37,6 +37,7 @@ enum EntityType {
   CATEGORY
   AUTH
   BLOG
+  MEDIA
 }
 
 model AppLogs {
@@ -63,9 +64,23 @@ model User {
   updatedAt    DateTime @updatedAt
 
   posSessions PosSession[] @relation("openedBy")
+  refreshTokens RefreshToken[]
 
   @@map("users")
   appLogs AppLogs[]
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+  @@index([userId])
 }
 
 model Category {
@@ -78,7 +93,6 @@ model Category {
 
 
   products Product[]
-  services Service[]
 
   @@map("categories")
 }
@@ -102,6 +116,7 @@ model Product {
 
   category Category @relation(fields: [categoryId], references: [id])
   sales SaleItem[]
+  mediaFiles ProductMedia[]
 
   @@map("products")
 }
@@ -118,12 +133,11 @@ model Service {
   durationMinutes Int
   isActive Boolean @default(true)
   isPublished Boolean @default(true)
-  categoryId String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  category Category? @relation(fields: [categoryId], references: [id])
   sales SaleItem[]
+  mediaFiles ServiceMedia[]
 
   @@map("services")
 }
@@ -209,20 +223,37 @@ model SaleItem {
   @@map("sale_items")
 }
 
-enum MediaType {
-  IMAGE
-  VIDEO
-  AUDIO
-  DOCUMENT
-}
-
 model Media {
   id String @id @default(cuid())
   alt String?
   url String
-  type MediaType
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  productsMedia ProductMedia[]
+  servicesMedia ServiceMedia[]
+
   @@map("media")
+}
+
+model ProductMedia {
+  productId String
+  mediaId String
+  orderIndex Int @default(0)
+  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([productId, mediaId])
+  @@map("product_media")
+}
+
+model ServiceMedia {
+  serviceId String
+  mediaId String
+  orderIndex Int @default(0)
+  service Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  media Media @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@id([serviceId, mediaId])
+  @@map("service_media")
 }

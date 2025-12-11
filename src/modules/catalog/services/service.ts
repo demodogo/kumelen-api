@@ -5,29 +5,16 @@ import { appLogsRepository } from '../../app-logs/repository.js';
 import { EntityType, LogAction } from '@prisma/client';
 
 export async function listServices(query: ServiceListQuery) {
-  const { page, pageSize, search, categoryId, isPublic } = query;
+  const { page, pageSize, search, isPublic } = query;
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
-  const [items, total] = await servicesRepository.findManyWithCount({
+  return await servicesRepository.findMany({
     search,
-    categoryId,
     isPublic,
     skip,
     take,
   });
-
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  return {
-    items,
-    pagination: {
-      page,
-      pageSize,
-      total,
-      totalPages,
-    },
-  };
 }
 
 export async function getServiceById(id: string) {
@@ -79,4 +66,28 @@ export async function deleteService(authedId: string, id: string) {
     entityId: service.id,
     action: LogAction.DELETE,
   });
+}
+
+export async function getServiceMedia(serviceId: string) {
+  return servicesRepository.findMediaByServiceId(serviceId);
+}
+
+export async function attachMediaToService(
+  serviceId: string,
+  mediaId: string,
+  orderIndex?: number
+) {
+  return servicesRepository.attachMediaToService({ serviceId, mediaId, orderIndex });
+}
+
+export async function updateServiceMediaOrder(
+  serviceId: string,
+  mediaId: string,
+  orderIndex: number
+) {
+  return servicesRepository.updateServiceMediaOrder({ serviceId, mediaId, orderIndex });
+}
+
+export async function detachServiceMedia(serviceId: string, mediaId: string) {
+  return servicesRepository.detachServiceMedia({ serviceId, mediaId });
 }

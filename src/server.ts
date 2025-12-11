@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { secureHeaders } from 'hono/secure-headers';
 import { env } from './config/env.js';
-import { apiRouter } from './routes/index.js';
+import { apiPrivateRouter, apiPublicRouter } from './routes/index.js';
 import { requestLogger } from './middleware/logger.js';
 import { serve } from '@hono/node-server';
 import { errorHandler } from './middleware/errorHandler.js';
@@ -18,8 +18,8 @@ app.get('/health', (c) => {
   return c.json({ status: 'ok', env: env.NODE_ENV });
 });
 
-app.route('/api', apiRouter);
-
+app.route('/api', apiPrivateRouter);
+app.route('/api', apiPublicRouter);
 serve(
   {
     fetch: app.fetch,

@@ -1,8 +1,14 @@
 import type { CreateProductInput, ProductListQuery, UpdateProductInput } from './types.js';
 import { productsRepository } from './repository.js';
-import { ConflictError, InternalServerError } from '../../../shared/errors/app-errors.js';
+import {
+  ConflictError,
+  InternalServerError,
+  NotFoundError,
+} from '../../../shared/errors/app-errors.js';
 import { appLogsRepository } from '../../app-logs/repository.js';
 import { EntityType, LogAction } from '@prisma/client';
+import { deleteFile, extractKeyFromUrl } from '../../../core/storage/r2-client.js';
+import { mediaRepository } from '../../media/repository.js';
 
 export async function listProducts(query: ProductListQuery) {
   const { page, pageSize, search, categoryId, isPublic } = query;
@@ -10,25 +16,13 @@ export async function listProducts(query: ProductListQuery) {
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
-  const [items, total] = await productsRepository.findManyWithCount({
+  return await productsRepository.findMany({
     search,
     categoryId,
     isPublic,
     skip,
     take,
   });
-
-  const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  return {
-    items,
-    pagination: {
-      page,
-      pageSize,
-      total,
-      totalPages,
-    },
-  };
 }
 
 export async function getProductById(id: string) {
@@ -75,7 +69,7 @@ export async function updateProduct(authedId: string, id: string, data: UpdatePr
 export async function deleteProduct(authedId: string, id: string): Promise<void> {
   const product = await productsRepository.findById(id);
   if (!product) {
-    throw new InternalServerError();
+    throw new NotFoundError('Producto');
   }
   await productsRepository.delete(id);
   await appLogsRepository.createLog({
@@ -84,4 +78,38 @@ export async function deleteProduct(authedId: string, id: string): Promise<void>
     entityId: product.id,
     action: LogAction.DELETE,
   });
+}
+
+export async function getProductMedia(productId: string) {
+  return productsRepository.findMediaByProductId(productId);
+}
+
+export async function attachProductMedia(productId: string, mediaId: string, orderIndex?: number) {
+  return productsRepository.attachMediaToProduct({ productId, mediaId, orderIndex });
+}
+
+export async function updateProductMediaOrder(
+  productId: string,
+  mediaId: string,
+  orderIndex: number
+) {
+  return productsRepository.updateProductMediaOrder({ productId, mediaId, orderIndex });
+}
+
+export async function detachProductMedia(
+  productId: string,
+  mediaId: string,
+  deleteFromStorage = false
+) {
+  if (deleteFromStorage) {
+    const media = await mediaRepository.findById(mediaId);
+    if (media) {
+      const key = extractKeyFromUrl(media.url);
+      if (key) {
+        await deleteFile(key);
+      }
+      await mediaRepository.deleteMedia(mediaId);
+    }
+  }
+  return productsRepository.detachProductMedia({ productId, mediaId });
 }

@@ -3,13 +3,25 @@ import { authMiddleware } from '../../../middleware/auth.js';
 import { hasRole } from '../../../middleware/role-guard.js';
 import { Role } from '@prisma/client';
 import { zValidator } from '@hono/zod-validator';
-import { createServiceSchema, serviceListQuerySchema, updateServiceSchema } from './schema.js';
 import {
+  createServiceSchema,
+  serviceIdParamSchema,
+  serviceListQuerySchema,
+  serviceMediaAttachSchema,
+  serviceMediaParamsSchema,
+  serviceMediaUpdateSchema,
+  updateServiceSchema,
+} from './schema.js';
+import {
+  attachMediaToService,
   createService,
   deleteService,
+  detachServiceMedia,
   getServiceById,
+  getServiceMedia,
   listServices,
   updateService,
+  updateServiceMediaOrder,
 } from './service.js';
 import { AppError } from '../../../shared/errors/app-errors.js';
 
@@ -25,7 +37,7 @@ servicesRouter.post(
     try {
       const authed = c.get('user');
       const service = await createService(authed.sub, data);
-      return c.json({ service }, 201);
+      return c.json(service, 201);
     } catch (error) {
       if (error instanceof AppError) {
         return c.json({ message: error.message, code: error.code }, error.statusCode as any);
@@ -39,8 +51,9 @@ servicesRouter.get('', authMiddleware, zValidator('query', serviceListQuerySchem
   try {
     const query = c.req.valid('query');
     const services = await listServices(query);
-    return c.json({ services }, 200);
+    return c.json(services, 200);
   } catch (error) {
+    console.log(error);
     if (error instanceof AppError) {
       return c.json({ message: error.message, code: error.code }, error.statusCode as any);
     }
@@ -52,7 +65,7 @@ servicesRouter.get('/:id', authMiddleware, async (c) => {
   try {
     const id = c.req.param('id');
     const service = await getServiceById(id);
-    return c.json({ service }, 200);
+    return c.json(service, 200);
   } catch (error) {
     if (error instanceof AppError) {
       return c.json({ message: error.message, code: error.code }, error.statusCode as any);
@@ -70,9 +83,10 @@ servicesRouter.patch(
     try {
       const id = c.req.param('id');
       const data = c.req.valid('json');
+      console.log('DATA:', data);
       const authed = c.get('user');
       const service = await updateService(authed.sub, id, data);
-      return c.json({ service }, 200);
+      return c.json(service, 200);
     } catch (error) {
       if (error instanceof AppError) {
         return c.json({ message: error.message, code: error.code }, error.statusCode as any);
@@ -86,8 +100,22 @@ servicesRouter.delete('/:id', authMiddleware, hasRole([Role.admin]), async (c) =
   try {
     const id = c.req.param('id');
     const authed = c.get('user');
-    const result = await deleteService(authed.sub, id);
-    return c.json({ result }, 200);
+    await deleteService(authed.sub, id);
+    return c.json({ message: 'OK' }, 200);
+  } catch (error) {
+    console.log(error);
+    if (error instanceof AppError) {
+      return c.json({ message: error.message, code: error.code }, error.statusCode as any);
+    }
+    return c.json({ message: 'Internal server error' }, 500);
+  }
+});
+
+servicesRouter.get('/:id/media', zValidator('param', serviceIdParamSchema), async (c) => {
+  try {
+    const { id } = c.req.valid('param');
+    const items = await getServiceMedia(id);
+    return c.json(items, 200);
   } catch (error) {
     if (error instanceof AppError) {
       return c.json({ message: error.message, code: error.code }, error.statusCode as any);
@@ -95,3 +123,65 @@ servicesRouter.delete('/:id', authMiddleware, hasRole([Role.admin]), async (c) =
     return c.json({ message: 'Internal server error' }, 500);
   }
 });
+
+servicesRouter.post(
+  '/:id/media',
+  authMiddleware,
+  hasRole([Role.admin, Role.user]),
+  zValidator('param', serviceIdParamSchema),
+  zValidator('json', serviceMediaAttachSchema),
+  async (c) => {
+    try {
+      const { id } = c.req.valid('param');
+      const { mediaId, orderIndex } = c.req.valid('json');
+      const item = await attachMediaToService(id, mediaId, orderIndex);
+      return c.json(item, 200);
+    } catch (error) {
+      if (error instanceof AppError) {
+        return c.json({ message: error.message, code: error.code }, error.statusCode as any);
+      }
+      return c.json({ message: 'Internal server error' }, 500);
+    }
+  }
+);
+
+servicesRouter.patch(
+  '/:id/media/:mediaId',
+  authMiddleware,
+  hasRole([Role.admin, Role.user]),
+  zValidator('param', serviceMediaParamsSchema),
+  zValidator('json', serviceMediaUpdateSchema),
+  async (c) => {
+    try {
+      const { id, mediaId } = c.req.valid('param');
+      const { orderIndex } = c.req.valid('json');
+      const item = await updateServiceMediaOrder(id, mediaId, orderIndex);
+      return c.json(item, 200);
+    } catch (error) {
+      console.log(error);
+      if (error instanceof AppError) {
+        return c.json({ message: error.message, code: error.code }, error.statusCode as any);
+      }
+      return c.json({ message: 'Internal server error' }, 500);
+    }
+  }
+);
+
+servicesRouter.delete(
+  '/:id/media/:mediaId',
+  authMiddleware,
+  hasRole([Role.admin, Role.user]),
+  zValidator('param', serviceMediaParamsSchema),
+  async (c) => {
+    try {
+      const { id, mediaId } = c.req.valid('param');
+      await detachServiceMedia(id, mediaId);
+      return c.json({ message: 'OK' }, 200);
+    } catch (error) {
+      if (error instanceof AppError) {
+        return c.json({ message: error.message, code: error.code }, error.statusCode as any);
+      }
+      return c.json({ message: 'Internal server error' }, 500);
+    }
+  }
+);

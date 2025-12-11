@@ -1,19 +1,25 @@
 import { Hono } from 'hono';
 import { authRouter } from '../modules/auth/routes.js';
+import { authPublicRouter } from '../modules/auth/public-routes.js';
 import { userRouter } from '../modules/users/routes.js';
 import { catalogRouter } from '../modules/catalog/routes.js';
 import { logsRouter } from '../modules/app-logs/routes.js';
+import { mediaRouter } from '../modules/media/routes.js';
 
-export const apiRouter = new Hono();
-
-apiRouter.get('/', (c) => {
+export const apiPrivateRouter = new Hono().basePath('/private');
+apiPrivateRouter.get('/', (c) => {
   return c.json({
     name: 'Kumelen API',
     version: '0.1.0',
   });
 });
 
-apiRouter.route('/auth', authRouter);
-apiRouter.route('/users', userRouter);
-apiRouter.route('/catalog', catalogRouter);
-apiRouter.route('/logs', logsRouter);
+apiPrivateRouter.route('/auth', authRouter);
+apiPrivateRouter.route('/users', userRouter);
+apiPrivateRouter.route('/catalog', catalogRouter);
+apiPrivateRouter.route('/logs', logsRouter);
+apiPrivateRouter.route('/media', mediaRouter);
+
+export const apiPublicRouter = new Hono().basePath('/public');
+
+apiPublicRouter.route('/auth', authPublicRouter);

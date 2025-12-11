@@ -10,14 +10,31 @@ export const createServiceSchema = z.object({
   durationMinutes: z.number().int().nonnegative(),
   isActive: z.boolean().default(true),
   isPublished: z.boolean().default(false),
-  categoryId: z.string().optional(),
 });
 
 export const updateServiceSchema = createServiceSchema.partial();
 
+export const serviceMediaAttachSchema = z.object({
+  mediaId: z.string(),
+  orderIndex: z.number().int().nonnegative().optional(),
+});
+
+export const serviceMediaUpdateSchema = z.object({
+  orderIndex: z.number().int().nonnegative(),
+});
+
+export const serviceMediaParamsSchema = z.object({
+  id: z.string(),
+  mediaId: z.string(),
+});
+
+export const serviceIdParamSchema = z.object({
+  id: z.string(),
+});
+
 export const serviceListQuerySchema = z.object({
   search: z.string().optional(),
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.string().optional(),
   isPublic: z
     .enum(['true', 'false'])
     .optional()

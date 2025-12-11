@@ -17,15 +17,25 @@ export type Service = {
   isActive: boolean;
   isPublished: boolean;
   durationMinutes: number;
-  categoryId: string;
   created_at: Date;
   updated_at: Date;
 };
 
 export type FindManyArgs = {
   search?: string;
-  categoryId?: string;
   isPublic?: boolean;
   skip?: number;
   take?: number;
+};
+
+export type ServiceMedia = {
+  id: string;
+  serviceId: string;
+  mediaId: string;
+  orderIndex: number;
+  media: {
+    id: string;
+    url: string;
+    alt: string | null;
+  };
 };

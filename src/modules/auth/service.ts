@@ -1,6 +1,6 @@
 import { env } from '../../config/env.js';
 import { EntityType, LogAction, type User } from '@prisma/client';
-import type { LoginUserInput } from './types.js';
+import type { LoginUserInput, RefreshTokenInput } from './types.js';
 import { comparePassword, hashPassword } from '../../lib/auth.js';
 import { SignJWT } from 'jose';
 import { usersRepository } from '../users/repository.js';
@@ -8,6 +8,7 @@ import { sanitizeUser } from '../users/helpers.js';
 import { authRepository } from './repository.js';
 import { NotFoundError, UnauthorizedError } from '../../shared/errors/app-errors.js';
 import { appLogsRepository } from '../app-logs/repository.js';
+import crypto from 'crypto';
 
 const JWT_SECRET = new TextEncoder().encode(env.JWT_SECRET);
 
@@ -17,6 +18,27 @@ function buildTokenPayload(user: User) {
     username: user.username,
     role: user.role,
   };
+}
+
+async function generateAccessToken(user: User) {
+  return await new SignJWT(buildTokenPayload(user))
+    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+    .setIssuedAt()
+    .setExpirationTime('15m') // Token de acceso corto
+    .sign(JWT_SECRET);
+}
+
+async function generateRefreshToken(userId: string) {
+  const token = crypto.randomBytes(64).toString('hex');
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 días
+
+  await authRepository.createRefreshToken({
+    token,
+    userId,
+    expiresAt,
+  });
+
+  return token;
 }
 
 export async function loginUser(data: LoginUserInput) {
@@ -29,11 +51,8 @@ export async function loginUser(data: LoginUserInput) {
     throw new UnauthorizedError();
   }
 
-  const token = await new SignJWT(buildTokenPayload(user))
-    .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-    .setIssuedAt()
-    .setExpirationTime('24h')
-    .sign(JWT_SECRET);
+  const accessToken = await generateAccessToken(user);
+  const refreshToken = await generateRefreshToken(user.id);
 
   await appLogsRepository.createLog({
     userId: user.id,
@@ -41,7 +60,41 @@ export async function loginUser(data: LoginUserInput) {
     entity: EntityType.AUTH,
     entityId: user.id,
   });
-  return { token, user: sanitizeUser(user) };
+
+  return {
+    accessToken,
+    refreshToken,
+    user: sanitizeUser(user),
+  };
+}
+
+export async function refreshAccessToken(data: RefreshTokenInput) {
+  const storedToken = await authRepository.findRefreshToken(data.refreshToken);
+
+  if (!storedToken) {
+    throw new UnauthorizedError('Invalid refresh token');
+  }
+
+  if (storedToken.expiresAt < new Date()) {
+    await authRepository.deleteRefreshToken(storedToken.id);
+    throw new UnauthorizedError('Refresh token expired');
+  }
+
+  const user = await usersRepository.findById(storedToken.userId);
+  if (!user) {
+    throw new NotFoundError('User');
+  }
+
+  await authRepository.deleteRefreshToken(storedToken.id);
+
+  const accessToken = await generateAccessToken(user);
+  const refreshToken = await generateRefreshToken(user.id);
+
+  return {
+    accessToken,
+    refreshToken,
+    user: sanitizeUser(user),
+  };
 }
 
 export async function changePassword(id: string, password: string) {

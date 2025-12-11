@@ -1,26 +1,46 @@
 import type { CreateProductInput, FindManyArgs, UpdateProductInput } from './types.js';
-import type { Product } from '@prisma/client';
+import type { ProductMedia } from '@prisma/client';
 import { buildWhere } from './helpers.js';
 import { prisma } from '../../../db/prisma.js';
 import { categoriesRepository } from '../categories/repository.js';
 import { ConflictError } from '../../../shared/errors/app-errors.js';
 
 export const productsRepository = {
-  async findManyWithCount(args: FindManyArgs): Promise<[Product[], number]> {
+  async findMany(args: FindManyArgs) {
     const { search, categoryId, isPublic, skip, take } = args;
     const where = buildWhere({ search, categoryId, isPublic });
 
-    const [items, total] = await Promise.all([
-      prisma.product.findMany({
-        where,
-        skip,
-        take,
-        orderBy: { updatedAt: 'desc' },
-      }),
-      prisma.product.count({ where }),
-    ]);
+    const items = await prisma.product.findMany({
+      where,
+      skip,
+      take,
+      orderBy: { updatedAt: 'desc' },
+      include: {
+        category: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
+        mediaFiles: {
+          include: {
+            media: {
+              select: {
+                id: true,
+                url: true,
+                alt: true,
+              },
+            },
+          },
+        },
+      },
+    });
 
-    return [items as Product[], total];
+    return items.map((item) => ({
+      ...item,
+      mediaFiles: item.mediaFiles.sort((a, b) => b.orderIndex - a.orderIndex),
+    }));
   },
 
   findById(id: string) {
@@ -62,7 +82,7 @@ export const productsRepository = {
         ...(data.price !== undefined && { price: data.price }),
         ...(data.cost !== undefined && { cost: data.cost }),
         ...(data.minStock !== undefined && { minStock: data.minStock }),
-        ...(data.isPublished !== undefined && { is_public: data.isPublished }),
+        ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
         ...(data.stock !== undefined && { stock: data.stock }),
         ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
       },
@@ -71,5 +91,64 @@ export const productsRepository = {
 
   delete(id: string) {
     return prisma.product.delete({ where: { id } });
+  },
+
+  async findMediaByProductId(productId: string) {
+    const items = await prisma.productMedia.findMany({
+      where: { productId },
+      include: { media: true },
+    });
+    return items as unknown as ProductMedia[];
+  },
+
+  async attachMediaToProduct(args: { productId: string; mediaId: string; orderIndex?: number }) {
+    const { productId, mediaId, orderIndex } = args;
+    let finalIndex = orderIndex;
+    if (finalIndex === undefined) {
+      const last = await prisma.productMedia.findFirst({
+        where: { productId },
+        orderBy: { orderIndex: 'desc' },
+      });
+      finalIndex = last ? last.orderIndex + 1 : 0;
+    }
+    const item = await prisma.productMedia.create({
+      data: {
+        productId,
+        mediaId,
+        orderIndex: finalIndex,
+      },
+      include: { media: true },
+    });
+
+    return item as unknown as ProductMedia;
+  },
+
+  async updateProductMediaOrder(args: { productId: string; mediaId: string; orderIndex: number }) {
+    const { productId, mediaId, orderIndex } = args;
+
+    const item = await prisma.productMedia.update({
+      where: {
+        productId_mediaId: {
+          productId,
+          mediaId,
+        },
+      },
+      data: { orderIndex },
+      include: { media: true },
+    });
+
+    return item as unknown as ProductMedia;
+  },
+
+  async detachProductMedia(args: { productId: string; mediaId: string }) {
+    const { productId, mediaId } = args;
+    await prisma.productMedia.delete({
+      where: {
+        productId_mediaId: {
+          productId,
+          mediaId,
+        },
+      },
+    });
   },
 };

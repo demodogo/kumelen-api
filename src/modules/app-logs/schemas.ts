@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 export const createAppLogSchema = z.object({
-  userId: z.string().uuid(),
+  userId: z.string(),
   action: z.enum(['CREATE', 'UPDATE', 'DELETE', 'LOGIN', 'LOGOUT']),
   entity: z.enum([
     'USER',
@@ -12,7 +12,8 @@ export const createAppLogSchema = z.object({
     'CUSTOMER',
     'POS_SESSION',
     'AUTH',
+    'MEDIA',
   ]),
-  entityId: z.string().uuid(),
+  entityId: z.string(),
   details: z.string().optional(),
 });

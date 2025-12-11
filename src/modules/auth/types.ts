@@ -1,4 +1,5 @@
 import { z } from 'zod';
-import { loginSchema } from './schemas.js';
+import { loginSchema, refreshTokenSchema } from './schemas.js';
 
 export type LoginUserInput = z.infer<typeof loginSchema>;
+export type RefreshTokenInput = z.infer<typeof refreshTokenSchema>;

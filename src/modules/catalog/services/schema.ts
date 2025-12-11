@@ -10,7 +10,6 @@ export const createServiceSchema = z.object({
   durationMinutes: z.number().int().nonnegative(),
   isActive: z.boolean().default(true),
   isPublished: z.boolean().default(false),
-  categoryId: z.string().optional(),
 });
 
 export const updateServiceSchema = createServiceSchema.partial();

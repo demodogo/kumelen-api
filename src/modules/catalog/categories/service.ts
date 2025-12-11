@@ -41,9 +41,8 @@ export async function getById(
 
 export async function getAll(includeOptions?: { services: boolean; products: boolean }) {
   const categories = await categoriesRepository.findAll(includeOptions);
-  if (!categories) {
-    throw new InternalServerError('Could not find categories');
-  }
+  console.log(categories);
+
   return categories;
 }
 
@@ -80,7 +79,7 @@ export async function updateCategory(authedId: string, id: string, data: UpdateC
 }
 
 export async function deleteCategory(authedId: string, id: string) {
-  const category = await categoriesRepository.findById(id, { services: true, products: true });
+  const category = await categoriesRepository.findById(id, { products: true });
   if (!category) {
     throw new NotFoundError('Category');
   }

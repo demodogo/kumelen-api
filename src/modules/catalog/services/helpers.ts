@@ -1,11 +1,7 @@
 import type { FindManyArgs } from './types.js';
 import { Prisma } from '@prisma/client';
 
-export function buildWhere({
-  search,
-  categoryId,
-  isPublic,
-}: FindManyArgs): Prisma.ServiceWhereInput {
+export function buildWhere({ search, isPublic }: FindManyArgs): Prisma.ServiceWhereInput {
   const where: Prisma.ServiceWhereInput = {};
 
   if (search) {
@@ -15,10 +11,6 @@ export function buildWhere({
       { longDesc: { contains: search, mode: 'insensitive' } },
       { code: { contains: search, mode: 'insensitive' } },
     ];
-  }
-
-  if (categoryId) {
-    where.categoryId = categoryId;
   }
 
   if (typeof isPublic === 'boolean') {

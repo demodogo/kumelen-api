@@ -28,22 +28,20 @@ export const categoriesRepository = {
     });
   },
 
-  findAll(includeOptions?: { services: boolean; products: boolean }) {
+  findAll(includeOptions?: { products: boolean }) {
     return prisma.category.findMany({
       include: {
-        services: includeOptions?.services ?? false,
-        products: includeOptions?.services ?? false,
+        products: includeOptions?.products ?? false,
       },
       orderBy: { updatedAt: 'asc' },
     });
   },
 
-  findById(id: string, includeOptions?: { services: boolean; products: boolean }) {
+  findById(id: string, includeOptions?: { products: boolean }) {
     return prisma.category.findUnique({
       where: { id },
       include: {
-        services: includeOptions?.services ?? false,
-        products: includeOptions?.services ?? false,
+        products: includeOptions?.products ?? false,
       },
     });
   },

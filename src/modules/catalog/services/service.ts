@@ -5,13 +5,12 @@ import { appLogsRepository } from '../../app-logs/repository.js';
 import { EntityType, LogAction } from '@prisma/client';
 
 export async function listServices(query: ServiceListQuery) {
-  const { page, pageSize, search, categoryId, isPublic } = query;
+  const { page, pageSize, search, isPublic } = query;
   const skip = (page - 1) * pageSize;
   const take = pageSize;
 
   return await servicesRepository.findMany({
     search,
-    categoryId,
     isPublic,
     skip,
     take,

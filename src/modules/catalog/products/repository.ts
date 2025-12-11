@@ -16,6 +16,13 @@ export const productsRepository = {
       take,
       orderBy: { updatedAt: 'desc' },
       include: {
+        category: {
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+          },
+        },
         mediaFiles: {
           include: {
             media: {
@@ -75,7 +82,7 @@ export const productsRepository = {
         ...(data.price !== undefined && { price: data.price }),
         ...(data.cost !== undefined && { cost: data.cost }),
         ...(data.minStock !== undefined && { minStock: data.minStock }),
-        ...(data.isPublished !== undefined && { is_public: data.isPublished }),
+        ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
         ...(data.stock !== undefined && { stock: data.stock }),
         ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
       },
@@ -89,6 +96,7 @@ export const productsRepository = {
   async findMediaByProductId(productId: string) {
     const items = await prisma.productMedia.findMany({
       where: { productId },
+      include: { media: true },
     });
     return items as unknown as ProductMedia[];
   },

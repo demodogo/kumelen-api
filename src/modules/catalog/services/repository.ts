@@ -2,13 +2,11 @@ import type { CreateServiceInput, FindManyArgs, UpdateServiceInput } from './typ
 import type { ServiceMedia } from '@prisma/client';
 import { buildWhere } from './helpers.js';
 import { prisma } from '../../../db/prisma.js';
-import { categoriesRepository } from '../categories/repository.js';
-import { ConflictError } from '../../../shared/errors/app-errors.js';
 
 export const servicesRepository = {
   async findMany(args: FindManyArgs) {
-    const { search, categoryId, isPublic, skip, take } = args;
-    const where = buildWhere({ search, categoryId, isPublic });
+    const { search, isPublic, skip, take } = args;
+    const where = buildWhere({ search, isPublic });
     const items = await prisma.service.findMany({
       where,
       skip,
@@ -40,18 +38,8 @@ export const servicesRepository = {
   },
 
   async create(data: CreateServiceInput) {
-    let category;
-    if (data.categoryId) {
-      category = await categoriesRepository.findById(data.categoryId);
-    } else {
-      category = await categoriesRepository.findBySlug('default');
-    }
-    if (!category) {
-      throw new ConflictError('Conflict with Category FK');
-    }
-    const withCategoryData = { ...data, categoryId: category.id };
     return prisma.service.create({
-      data: withCategoryData,
+      data,
     });
   },
 
@@ -61,14 +49,13 @@ export const servicesRepository = {
       data: {
         ...(data.name !== undefined && { name: data.name }),
         ...(data.slug !== undefined && { slug: data.slug }),
-        ...(data.shortDesc !== undefined && { short_desc: data.shortDesc }),
-        ...(data.longDesc !== undefined && { long_desc: data.longDesc }),
+        ...(data.shortDesc !== undefined && { shortDesc: data.shortDesc }),
+        ...(data.longDesc !== undefined && { longDesc: data.longDesc }),
         ...(data.price !== undefined && { price: data.price }),
         ...(data.cost !== undefined && { cost: data.cost }),
         ...(data.durationMinutes !== undefined && { durationMinutes: data.durationMinutes }),
         ...(data.isActive !== undefined && { isActive: data.isActive }),
         ...(data.isPublished !== undefined && { isPublished: data.isPublished }),
-        ...(data.categoryId !== undefined && { categoryId: data.categoryId }),
       },
     });
   },
@@ -88,6 +75,7 @@ export const servicesRepository = {
   async findMediaByServiceId(serviceId: string) {
     const items = await prisma.serviceMedia.findMany({
       where: { serviceId },
+      include: { media: true },
     });
     return items as unknown as ServiceMedia[];
   },

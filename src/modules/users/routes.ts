@@ -80,8 +80,8 @@ userRouter.delete('/:id', authMiddleware, hasRole([Role.admin]), async (c) => {
   try {
     const id = c.req.param('id');
     const authed = c.get('user');
-    const result = await deleteUser(authed.sub, id);
-    return c.json({ result }, 200);
+    await deleteUser(authed.sub, id);
+    return c.json({ message: 'OK' }, 200);
   } catch (error) {
     if (error instanceof AppError) {
       return c.json({ message: error.message, code: error.code }, error.statusCode as any);

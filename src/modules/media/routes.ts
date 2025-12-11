@@ -38,7 +38,7 @@ mediaRouter.post(
       const data = c.req.valid('json');
       const authed = c.get('user');
       const media = await createMedia(authed.sub, data);
-      return c.json({ media }, 201);
+      return c.json(media, 201);
     } catch (error) {
       if (error instanceof AppError) {
         return c.json({ message: error.message, code: error.code }, error.statusCode as any);

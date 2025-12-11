@@ -1,4 +1,4 @@
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export const r2Client = new S3Client({
@@ -24,4 +24,21 @@ export async function createPresignedUrl(key: string, contentType: string) {
 
 export function getPublicUrl(key: string) {
   return `${process.env.R2_PUBLIC_BASE_URL}/${key}`;
+}
+
+export function extractKeyFromUrl(url: string): string | null {
+  const baseUrl = process.env.R2_PUBLIC_BASE_URL;
+  if (!baseUrl || !url.startsWith(baseUrl)) {
+    return null;
+  }
+  return url.replace(`${baseUrl}/`, '');
+}
+
+export async function deleteFile(key: string) {
+  const command = new DeleteObjectCommand({
+    Bucket: process.env.R2_BUCKET_NAME!,
+    Key: key,
+  });
+
+  await r2Client.send(command);
 }

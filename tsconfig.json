@@ -12,6 +12,6 @@
     "jsxImportSource": "hono/jsx",
     "outDir": "./dist"
   },
-  "exclude": ["node_modules", "vitest.config.ts", "**/*.test.ts", "**/*.spec.ts"],
+  "exclude": ["node_modules", "vitest.config.ts", "**/*.test.ts", "**/*.spec.ts", "prisma/seed.ts"],
   "include": ["src", "prisma"]
 }

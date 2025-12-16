@@ -196,6 +196,7 @@ export const customersRepository = {
     }
     return null;
   },
+
   reactivateClient(id: string) {
     return prisma.customer.update({
       where: { id },

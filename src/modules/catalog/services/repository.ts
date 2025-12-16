@@ -8,7 +8,7 @@ export const servicesRepository = {
     const { search, isPublic, skip, take } = args;
     const where = buildWhere({ search, isPublic });
     const items = await prisma.service.findMany({
-      where,
+      where: { ...where, isActive: true },
       skip,
       take,
       orderBy: { updatedAt: 'desc' },
@@ -60,8 +60,14 @@ export const servicesRepository = {
     });
   },
 
-  delete(id: string) {
-    return prisma.service.delete({ where: { id } });
+  async delete(id: string) {
+    await prisma.service.update({
+      where: { id },
+      data: { isActive: false },
+    });
+    await prisma.serviceMedia.deleteMany({
+      where: { serviceId: id },
+    });
   },
 
   findByName(name: string) {
@@ -116,6 +122,47 @@ export const servicesRepository = {
     const { serviceId, mediaId } = args;
     await prisma.serviceMedia.delete({
       where: { serviceId_mediaId: { serviceId, mediaId } },
+    });
+  },
+
+  async validateUniqueFields(
+    fields: {
+      slug?: string;
+      name?: string;
+    },
+    currentData?: {
+      slug?: string;
+      name?: string;
+    },
+    excludeId?: string
+  ) {
+    const checks = [
+      { field: 'name', value: fields.name, method: servicesRepository.findByName },
+      { field: 'slug', value: fields.slug, method: servicesRepository.findBySlug },
+    ];
+
+    for (const { field, value, method } of checks) {
+      if (!value) continue;
+
+      if (currentData && currentData[field as keyof typeof currentData] === value) continue;
+
+      const existing = await method(value);
+
+      if (existing && existing.id !== excludeId) {
+        if (!existing.isActive) {
+          await servicesRepository.reactivateService(existing.id);
+          return existing.id;
+        }
+        throw new Error(`Ya existe un cliente con este ${field}`);
+      }
+    }
+    return null;
+  },
+
+  reactivateService(id: string) {
+    return prisma.service.update({
+      where: { id },
+      data: { isActive: true },
     });
   },
 };

@@ -1,6 +1,6 @@
 import type { CreateServiceInput, ServiceListQuery, UpdateServiceInput } from './types.js';
 import { servicesRepository } from './repository.js';
-import { ConflictError, InternalServerError } from '../../../shared/errors/app-errors.js';
+import { InternalServerError, NotFoundError } from '../../../shared/errors/app-errors.js';
 import { appLogsRepository } from '../../app-logs/repository.js';
 import { EntityType, LogAction } from '@prisma/client';
 
@@ -22,10 +22,20 @@ export async function getServiceById(id: string) {
 }
 
 export async function createService(authedId: string, data: CreateServiceInput) {
-  const existingSlug = await servicesRepository.findBySlug(data.slug);
-  const existingName = await servicesRepository.findByName(data.name);
-  if (existingName || existingSlug) {
-    throw new ConflictError('Service duplicate');
+  const reactivationId = await servicesRepository.validateUniqueFields({
+    name: data.name,
+    slug: data.slug,
+  });
+  if (reactivationId) {
+    const service = await servicesRepository.update(reactivationId, data);
+    await appLogsRepository.createLog({
+      userId: authedId,
+      entity: EntityType.SERVICE,
+      entityId: service.id,
+      action: LogAction.UPDATE,
+      details: 'Reactivación de servicio',
+    });
+    return service;
   }
   const service = await servicesRepository.create(data);
   if (!service) {
@@ -41,16 +51,41 @@ export async function createService(authedId: string, data: CreateServiceInput) 
 }
 
 export async function updateService(authedId: string, id: string, data: UpdateServiceInput) {
+  const existing = await servicesRepository.findById(id);
+  if (!existing) {
+    throw new NotFoundError('Servicio no encontrado');
+  }
+
+  const validationParams = {
+    currentData: {
+      name: existing.name,
+      slug: existing.slug,
+    },
+    excludeId: id,
+    fields: {
+      name: data.name,
+      slug: data.slug,
+    },
+  };
+
+  await servicesRepository.validateUniqueFields(
+    validationParams.fields,
+    validationParams.currentData,
+    validationParams.excludeId
+  );
+
   const service = await servicesRepository.update(id, data);
   if (!service) {
     throw new InternalServerError();
   }
+
   await appLogsRepository.createLog({
     userId: authedId,
     entity: EntityType.SERVICE,
     entityId: service.id,
     action: LogAction.UPDATE,
   });
+
   return service;
 }
 

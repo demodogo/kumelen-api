@@ -14,10 +14,10 @@ export const requestLogger: MiddlewareHandler = async (c, next) => {
       path: c.req.path,
       status: c.res.status,
       duration,
-      responseBody: await c.res
+      /*responseBody: await c.res
         .clone()
         .json()
-        .catch(() => null),
+        .catch(() => null),*/
     },
     'request completed'
   );

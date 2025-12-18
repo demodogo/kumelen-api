@@ -194,6 +194,7 @@ productsRouter.delete(
       await detachProductMedia(id, mediaId, deleteFromStorage);
       return c.json({ message: 'OK' }, 200);
     } catch (error) {
+      console.log(error);
       if (error instanceof AppError) {
         return c.json({ message: error.message, code: error.code }, error.statusCode as any);
       }

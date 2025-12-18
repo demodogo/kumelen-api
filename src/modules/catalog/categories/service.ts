@@ -80,6 +80,9 @@ export async function deleteCategory(authedId: string, id: string) {
   if (!category) {
     throw new NotFoundError('Category');
   }
+  if (category.slug === 'default') {
+    throw new ConflictError('Esta categoría no se puede eliminar');
+  }
   if (category.products.length > 0) {
     await Promise.all(
       category.products.map((p: { id: any }) =>

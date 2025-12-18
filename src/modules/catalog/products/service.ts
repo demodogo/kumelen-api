@@ -110,6 +110,7 @@ export async function detachProductMedia(
       }
       await mediaRepository.deleteMedia(mediaId);
     }
+  } else {
+    await productsRepository.detachProductMedia({ productId, mediaId });
   }
-  return productsRepository.detachProductMedia({ productId, mediaId });
 }

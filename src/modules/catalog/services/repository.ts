@@ -1,5 +1,5 @@
 import type { CreateServiceInput, FindManyArgs, UpdateServiceInput } from './types.js';
-import type { ServiceMedia } from '@prisma/client';
+import type { Prisma, ServiceMedia } from '@prisma/client';
 import { buildWhere } from './helpers.js';
 import { prisma } from '../../../db/prisma.js';
 
@@ -83,7 +83,7 @@ export const servicesRepository = {
       where: { serviceId },
       include: { media: true },
     });
-    return items as unknown as ServiceMedia[];
+    return items;
   },
 
   async attachMediaToService(args: { serviceId: string; mediaId: string; orderIndex?: number }) {

@@ -1,5 +1,5 @@
 import type { CreateProductInput, FindManyArgs, UpdateProductInput } from './types.js';
-import type { ProductMedia } from '@prisma/client';
+import type { Prisma, ProductMedia } from '@prisma/client';
 import { buildWhere } from './helpers.js';
 import { prisma } from '../../../db/prisma.js';
 import { categoriesRepository } from '../categories/repository.js';
@@ -98,7 +98,7 @@ export const productsRepository = {
       where: { productId },
       include: { media: true },
     });
-    return items as unknown as ProductMedia[];
+    return items;
   },
 
   async attachMediaToProduct(args: { productId: string; mediaId: string; orderIndex?: number }) {

@@ -3,6 +3,7 @@ import { servicesRepository } from './repository.js';
 import { InternalServerError, NotFoundError } from '../../../shared/errors/app-errors.js';
 import { appLogsRepository } from '../../app-logs/repository.js';
 import { EntityType, LogAction } from '@prisma/client';
+import { deleteFile, extractKeyFromUrl } from '../../../core/storage/r2-client.js';
 
 export async function listServices(query: ServiceListQuery) {
   const { page, pageSize, search, isPublic } = query;
@@ -93,6 +94,16 @@ export async function deleteService(authedId: string, id: string) {
   const service = await servicesRepository.findById(id);
   if (!service) {
     throw new InternalServerError();
+  }
+  const mediaFiles = await servicesRepository.findMediaByServiceId(id);
+  for (const serviceMedia of mediaFiles) {
+    const media = serviceMedia.media;
+    if (media) {
+      const key = extractKeyFromUrl(media.url);
+      if (key) {
+        await deleteFile(key);
+      }
+    }
   }
   await servicesRepository.delete(id);
   await appLogsRepository.createLog({

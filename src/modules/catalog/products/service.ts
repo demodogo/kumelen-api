@@ -71,6 +71,16 @@ export async function deleteProduct(authedId: string, id: string): Promise<void>
   if (!product) {
     throw new NotFoundError('Producto');
   }
+  const mediaFiles = await productsRepository.findMediaByProductId(id);
+  for (const productMedia of mediaFiles) {
+    const media = productMedia.media;
+    if (media) {
+      const key = extractKeyFromUrl(media.url);
+      if (key) {
+        await deleteFile(key);
+      }
+    }
+  }
   await productsRepository.delete(id);
   await appLogsRepository.createLog({
     userId: authedId,

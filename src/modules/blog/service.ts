@@ -70,6 +70,16 @@ export async function deleteBlogPost(authedId: string, id: string): Promise<void
   if (!blogPost) {
     throw new NotFoundError('Blog post');
   }
+  const mediaFiles = await blogRepository.findMediaByBlogPostId(id);
+  for (const blogPostMedia of mediaFiles) {
+    const media = blogPostMedia.media;
+    if (media) {
+      const key = extractKeyFromUrl(media.url);
+      if (key) {
+        await deleteFile(key);
+      }
+    }
+  }
   await blogRepository.delete(id);
   await appLogsRepository.createLog({
     userId: authedId,

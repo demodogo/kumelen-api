@@ -1,5 +1,6 @@
 import { buildWhere } from './helpers.js';
 import { prisma } from '../../db/prisma.js';
+import type { Prisma } from '@prisma/client';
 import type {
   BlogPostMedia,
   CreateBlogPostInput,
@@ -81,7 +82,7 @@ export const blogRepository = {
       where: { blogPostId },
       include: { media: true },
     });
-    return items as unknown as BlogPostMedia[];
+    return items;
   },
 
   async attachMediaToBlogPost(args: { blogPostId: string; mediaId: string; orderIndex?: number }) {

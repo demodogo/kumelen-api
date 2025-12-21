@@ -24,6 +24,7 @@ const createAppointmentBaseSchema = z.object({
   endAt: z.string().refine(isIsoDateTimeWithOrWithoutOffset, 'Fecha inválida').optional(),
   status: z.nativeEnum(AppointmentStatus).optional(),
   notes: z.string().optional(),
+  clientNotes: z.string().optional(),
 });
 
 export const createAppointmentSchema = createAppointmentBaseSchema
@@ -73,3 +74,28 @@ export const availabilityQuerySchema = z.object({
   therapistId: z.string().optional(),
   durationMinutes: z.coerce.number().int().positive().optional(),
 });
+
+export const publicCreateAppointmentSchema = z
+  .object({
+    customerData: z.object({
+      name: z.string().min(1, 'Nombre requerido'),
+      lastName: z.string().optional(),
+      email: z.string().email('Email inválido').optional(),
+      phone: z.string().optional(),
+      rut: z.string().optional(),
+    }),
+    therapistId: z.string().optional(),
+    serviceId: z.string().min(1, 'Requerido'),
+    startAt: z.string().refine(isIsoDateTimeWithOrWithoutOffset, 'Fecha inválida'),
+    notes: z.string().optional(),
+    clientNotes: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      return data.customerData.email || data.customerData.phone || data.customerData.rut;
+    },
+    {
+      message: 'Debe proporcionar al menos email, teléfono o RUT',
+      path: ['customerData'],
+    }
+  );

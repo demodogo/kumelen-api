@@ -9,6 +9,7 @@ import { blogPostPublicRouter, blogPostRouter } from '../modules/blog/routes.js'
 import { therapistsRouter } from '../modules/agenda/therapists/routes.js';
 import { schedulesRouter } from '../modules/agenda/schedules/routes.js';
 import { appointmentsRouter } from '../modules/agenda/appointments/routes.js';
+import { publicAppointmentsRouter } from '../modules/agenda/appointments/public-routes.js';
 import { patientRecordsRouter } from '../modules/agenda/patient-records/routes.js';
 import { sessionNotesRouter } from '../modules/agenda/session-notes/routes.js';
 import { customersRouter } from '../modules/clients/routes.js';
@@ -39,3 +40,4 @@ export const apiPublicRouter = new Hono().basePath('/public');
 apiPublicRouter.route('/auth', authPublicRouter);
 apiPublicRouter.route('/catalog', catalogPublicRouter);
 apiPublicRouter.route('/blog', blogPostPublicRouter);
+apiPublicRouter.route('/appointments', publicAppointmentsRouter);

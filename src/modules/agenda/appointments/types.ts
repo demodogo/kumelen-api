@@ -2,6 +2,7 @@ import { z } from 'zod';
 import {
   appointmentListQuerySchema,
   createAppointmentSchema,
+  publicCreateAppointmentSchema,
   updateAppointmentSchema,
 } from './schema.js';
 import type { AppointmentStatus } from '@prisma/client';
@@ -9,6 +10,7 @@ import type { AppointmentStatus } from '@prisma/client';
 export type CreateAppointmentInput = z.infer<typeof createAppointmentSchema>;
 export type UpdateAppointmentInput = z.infer<typeof updateAppointmentSchema>;
 export type AppointmentListQuery = z.infer<typeof appointmentListQuerySchema>;
+export type PublicCreateAppointmentInput = z.infer<typeof publicCreateAppointmentSchema>;
 
 export type FindManyArgs = {
   therapistId?: string;

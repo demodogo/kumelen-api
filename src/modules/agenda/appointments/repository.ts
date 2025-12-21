@@ -85,6 +85,8 @@ export const appointmentsRepository = {
       customerId: string;
       startAt: string;
       endAt: string;
+      notes?: string;
+      clientNotes?: string;
     }
   ) {
     return prisma.appointment.create({
@@ -95,6 +97,7 @@ export const appointmentsRepository = {
         startAt: new Date(data.startAt),
         endAt: new Date(data.endAt),
         status: data.status || 'PENDING',
+        ...(data.clientNotes !== undefined && { clientNotes: data.clientNotes }),
       },
       include: {
         customer: {
@@ -141,6 +144,8 @@ export const appointmentsRepository = {
         ...(data.endAt !== undefined && { endAt: new Date(data.endAt) }),
         ...(data.status !== undefined && { status: data.status }),
         ...(data.reminderSent !== undefined && { reminderSent: data.reminderSent }),
+        ...(data.notes !== undefined && { notes: data.notes }),
+        ...(data.clientNotes !== undefined && { clientNotes: data.clientNotes }),
       },
       include: {
         customer: {

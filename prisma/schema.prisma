@@ -372,6 +372,7 @@ model Appointment {
   customerId      String
   therapistId     String?
   serviceId       String
+  clientNotes String?
   startAt DateTime
   endAt DateTime
   status          AppointmentStatus @default(PENDING)

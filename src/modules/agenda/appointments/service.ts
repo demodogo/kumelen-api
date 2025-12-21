@@ -1,6 +1,7 @@
 import type {
   AppointmentListQuery,
   CreateAppointmentInput,
+  PublicCreateAppointmentInput,
   UpdateAppointmentInput,
 } from './types.js';
 import { appointmentsRepository } from './repository.js';
@@ -364,4 +365,89 @@ export async function checkAvailability(
     serviceDurationMinutes,
     freeIntervals: merged.map((i) => ({ start: toHHmm(i.startMin), end: toHHmm(i.endMin) })),
   };
+}
+
+export async function createPublicAppointment(data: PublicCreateAppointmentInput) {
+  const service = await appointmentsRepository.findByServiceId(data.serviceId);
+  if (!service) {
+    throw new NotFoundError('Servicio no encontrado');
+  }
+
+  let customerId: string;
+  let existingCustomer = null;
+
+  if (data.customerData.email) {
+    existingCustomer = await customersRepository.findByEmail(data.customerData.email);
+  }
+
+  if (!existingCustomer && data.customerData.phone) {
+    existingCustomer = await customersRepository.findByPhone(data.customerData.phone);
+  }
+
+  if (!existingCustomer && data.customerData.rut) {
+    existingCustomer = await customersRepository.findByRut(data.customerData.rut);
+  }
+
+  if (existingCustomer) {
+    if (!existingCustomer.isActive) {
+      await customersRepository.reactivateClient(existingCustomer.id);
+    }
+    customerId = existingCustomer.id;
+  } else {
+    const newCustomer = await customersRepository.create({
+      name: data.customerData.name,
+      lastName: data.customerData.lastName,
+      email: data.customerData.email,
+      phone: data.customerData.phone,
+      rut: data.customerData.rut,
+    });
+    customerId = newCustomer.id;
+  }
+
+  const startAt = parseIsoToUtcDate(data.startAt);
+  if (Number.isNaN(startAt.getTime())) {
+    throw new BadRequestError('startAt inválido');
+  }
+
+  const endAt = new Date(startAt.getTime() + service.durationMinutes * 60_000);
+
+  let therapistId = data.therapistId;
+  if (!therapistId) {
+    therapistId =
+      (await findAvailableTherapist({ serviceId: data.serviceId, startAt, endAt })) ?? undefined;
+    if (!therapistId) {
+      throw new ConflictError('No hay terapeutas disponibles para esta fecha y hora');
+    }
+  }
+
+  const conflict = await prisma.appointment.findFirst({
+    where: {
+      therapistId,
+      status: { notIn: ['CANCELLED', 'NO_SHOW'] },
+      startAt: { lt: endAt },
+      endAt: { gt: startAt },
+    },
+    select: { id: true },
+  });
+
+  if (conflict) {
+    throw new ConflictError('Horario no disponible');
+  }
+
+  const appointment = await appointmentsRepository.create({
+    customerId,
+    therapistId,
+    serviceId: data.serviceId,
+    startAt: startAt.toISOString(),
+    endAt: endAt.toISOString(),
+    status: 'PENDING',
+    notes: data.notes,
+    clientNotes: data.clientNotes,
+  });
+
+  if (!appointment) {
+    throw new InternalServerError('Error al crear la cita');
+  }
+
+  return sanitizeAppointment(appointment);
 }

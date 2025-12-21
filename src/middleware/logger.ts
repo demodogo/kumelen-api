@@ -23,23 +23,23 @@ export const requestLogger: MiddlewareHandler = async (c, next) => {
 
   const duration = Date.now() - start;
 
-  const responseBody = await c.res
-    .clone()
-    .json()
-    .catch(async () => {
-      try {
-        return await c.res.clone().text();
-      } catch {
-        return null;
-      }
-    });
+  // const responseBody = await c.res
+  //   .clone()
+  //   .json()
+  //   .catch(async () => {
+  //     try {
+  //       return await c.res.clone().text();
+  //     } catch {
+  //       return null;
+  //     }
+  //   });
 
   const logPayload = {
     method: c.req.method,
     path: c.req.path,
     status: c.res.status,
     duration,
-    responseBody,
+    // responseBody,
   };
 
   if (c.res.status >= 500) {

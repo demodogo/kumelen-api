@@ -15,11 +15,11 @@ import { appLogsRepository } from '../../app-logs/repository.js';
 import { type DayOfWeek, EntityType, LogAction } from '@prisma/client';
 import { customersRepository } from '../../clients/repository.js';
 import {
+  buildAppointmentsOverlapDayWhere,
   BUSINESS_TIMEZONE,
+  clampInterval,
   DAY_END_MIN,
   DAY_START_MIN,
-  buildAppointmentsOverlapDayWhere,
-  clampInterval,
   filterByDuration,
   getDayOfWeek,
   getDayRangeUtcFromLocalDate,
@@ -31,6 +31,10 @@ import {
   toMinutes,
 } from './helpers.js';
 import { prisma } from '../../../db/prisma.js';
+import {
+  sendClientAppointmentConfirmation,
+  sendKumelenAppointmentConfirmation,
+} from '../../notifications/service.js';
 
 export async function listAppointments(query: AppointmentListQuery) {
   const { page, pageSize, therapistId, customerId, status, startDate, endDate } = query;
@@ -163,6 +167,8 @@ export async function createAppointment(authedId: string, data: CreateAppointmen
     action: LogAction.CREATE,
   });
 
+  await sendKumelenAppointmentConfirmation(appointment);
+  await sendClientAppointmentConfirmation(appointment);
   return sanitizeAppointment(appointment);
 }
 
@@ -448,6 +454,9 @@ export async function createPublicAppointment(data: PublicCreateAppointmentInput
   if (!appointment) {
     throw new InternalServerError('Error al crear la cita');
   }
+
+  await sendClientAppointmentConfirmation(appointment);
+  await sendKumelenAppointmentConfirmation(appointment);
 
   return sanitizeAppointment(appointment);
 }

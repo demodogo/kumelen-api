@@ -48,33 +48,9 @@ export const appointmentsRepository = {
     return prisma.appointment.findUnique({
       where: { id },
       include: {
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        therapist: {
-          select: {
-            id: true,
-            name: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        service: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            price: true,
-            durationMinutes: true,
-          },
-        },
+        customer: true,
+        therapist: true,
+        service: true,
       },
     });
   },
@@ -100,33 +76,9 @@ export const appointmentsRepository = {
         ...(data.clientNotes !== undefined && { clientNotes: data.clientNotes }),
       },
       include: {
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        therapist: {
-          select: {
-            id: true,
-            name: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        service: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            price: true,
-            durationMinutes: true,
-          },
-        },
+        customer: true,
+        therapist: true,
+        service: true,
       },
     });
   },
@@ -148,33 +100,9 @@ export const appointmentsRepository = {
         ...(data.clientNotes !== undefined && { clientNotes: data.clientNotes }),
       },
       include: {
-        customer: {
-          select: {
-            id: true,
-            name: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        therapist: {
-          select: {
-            id: true,
-            name: true,
-            lastName: true,
-            email: true,
-            phone: true,
-          },
-        },
-        service: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-            price: true,
-            durationMinutes: true,
-          },
-        },
+        customer: true,
+        therapist: true,
+        service: true,
       },
     });
   },

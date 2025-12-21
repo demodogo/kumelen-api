@@ -1,11 +1,14 @@
 import { type AppointmentStatus, DayOfWeek, Prisma } from '@prisma/client';
 import { DateTime } from 'luxon';
+import type { AppointmentWithRelations } from '../../notifications/types.js';
 
 export const BUSINESS_TIMEZONE = 'America/Santiago';
 export const DAY_START_MIN = 8 * 60 + 30;
 export const DAY_END_MIN = 21 * 60;
 
-export function sanitizeAppointment(appointment: any) {
+export function sanitizeAppointment(
+  appointment: AppointmentWithRelations | null
+): AppointmentWithRelations | null {
   if (!appointment) return null;
   return appointment;
 }

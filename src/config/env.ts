@@ -6,6 +6,7 @@ const envSchema = z.object({
   PORT: z.string().default('8080'),
   DATABASE_URL: z.string(),
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  WEBSITE_BASE_URL: z.string(),
 });
 
 const parsed = envSchema.safeParse(process.env);

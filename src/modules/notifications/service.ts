@@ -9,7 +9,7 @@ export function createMailTransporter() {
   return nodemailer.createTransport({
     host: process.env.GMAIL_SMTP_HOST,
     port: process.env.GMAIL_SMTP_PORT,
-    secure: false,
+    secure: true,
     auth: {
       user: process.env.GMAIL_SMTP_USER,
       pass: process.env.GMAIL_APP_PASSWORD,

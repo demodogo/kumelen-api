@@ -35,6 +35,7 @@ import {
   sendClientAppointmentConfirmation,
   sendKumelenAppointmentConfirmation,
 } from '../../notifications/service.js';
+import { logger } from '../../../core/logger.js';
 
 export async function listAppointments(query: AppointmentListQuery) {
   const { page, pageSize, therapistId, customerId, status, startDate, endDate } = query;
@@ -130,9 +131,28 @@ export async function createAppointment(authedId: string, data: CreateAppointmen
     therapistId =
       (await findAvailableTherapist({ serviceId: data.serviceId, startAt, endAt })) ?? undefined;
     if (!therapistId) {
+      logger.warn(
+        {
+          serviceId: data.serviceId,
+          startAt: startAt.toISOString(),
+          endAt: endAt.toISOString(),
+          durationMinutes: service.durationMinutes,
+        },
+        'createPublicAppointment: no available therapist found'
+      );
       throw new ConflictError('No hay terapeutas disponibles para esta fecha y hora');
     }
   }
+
+  logger.debug(
+    {
+      serviceId: data.serviceId,
+      therapistId,
+      startAt: startAt.toISOString(),
+      endAt: endAt.toISOString(),
+    },
+    'createPublicAppointment: therapist resolved'
+  );
 
   const conflict = await prisma.appointment.findFirst({
     where: {
@@ -145,6 +165,16 @@ export async function createAppointment(authedId: string, data: CreateAppointmen
   });
 
   if (conflict) {
+    logger.warn(
+      {
+        serviceId: data.serviceId,
+        therapistId,
+        conflictAppointmentId: conflict.id,
+        startAt: startAt.toISOString(),
+        endAt: endAt.toISOString(),
+      },
+      'createPublicAppointment: conflict found for therapist'
+    );
     throw new ConflictError('Horario no disponible');
   }
 
@@ -257,6 +287,15 @@ export async function findAvailableTherapist(args: {
 }) {
   const { serviceId, startAt, endAt } = args;
 
+  logger.debug(
+    {
+      serviceId,
+      startAt: startAt.toISOString(),
+      endAt: endAt.toISOString(),
+    },
+    'findAvailableTherapist: start'
+  );
+
   // Convertir a hora local de Chile para obtener el día correcto
   const startAtLocal = new Date(startAt.toLocaleString('en-US', { timeZone: BUSINESS_TIMEZONE }));
   const dayOfWeek: DayOfWeek = getDayOfWeek(startAtLocal);
@@ -290,23 +329,81 @@ export async function findAvailableTherapist(args: {
     },
   });
 
+  logger.debug(
+    {
+      serviceId,
+      dayOfWeek,
+      therapistsCount: therapists.length,
+      dayStartLocal: dayStart.toISOString(),
+      dayEndLocal: dayEnd.toISOString(),
+    },
+    'findAvailableTherapist: loaded therapists'
+  );
+
   // Usar hora local para comparar con el horario del terapeuta
   const startMin = startAtLocal.getHours() * 60 + startAtLocal.getMinutes();
   const endAtLocal = new Date(endAt.toLocaleString('en-US', { timeZone: BUSINESS_TIMEZONE }));
   const endMin = endAtLocal.getHours() * 60 + endAtLocal.getMinutes();
 
+  const discardStats = {
+    noSchedule: 0,
+    outOfHours: 0,
+    conflict: 0,
+  };
+
   for (const t of therapists) {
-    if (t.schedule.length === 0) continue;
+    if (t.schedule.length === 0) {
+      discardStats.noSchedule++;
+      continue;
+    }
     const sch = t.schedule[0];
     const schStart = Math.max(toMinutes(sch.startTime), DAY_START_MIN);
     const schEnd = Math.min(toMinutes(sch.endTime), DAY_END_MIN);
 
-    if (startMin < schStart || endMin > schEnd) continue;
+    if (startMin < schStart || endMin > schEnd) {
+      discardStats.outOfHours++;
+      continue;
+    }
 
     // Comparar las citas usando las fechas originales UTC
     const conflict = t.appointments.some((apt) => startAt < apt.endAt && endAt > apt.startAt);
-    if (!conflict) return t.id;
+    if (conflict) {
+      discardStats.conflict++;
+      continue;
+    }
+
+    logger.info(
+      {
+        serviceId,
+        therapistId: t.id,
+        dayOfWeek,
+        startAt: startAt.toISOString(),
+        endAt: endAt.toISOString(),
+        startMin,
+        endMin,
+        scheduleStartMin: schStart,
+        scheduleEndMin: schEnd,
+      },
+      'findAvailableTherapist: therapist selected'
+    );
+
+    return t.id;
   }
+
+  logger.warn(
+    {
+      serviceId,
+      dayOfWeek,
+      startAt: startAt.toISOString(),
+      endAt: endAt.toISOString(),
+      startMin,
+      endMin,
+      therapistsCount: therapists.length,
+      discardStats,
+    },
+    'findAvailableTherapist: no therapist available'
+  );
+
   return null;
 }
 
@@ -389,6 +486,15 @@ export async function checkAvailability(
 }
 
 export async function createPublicAppointment(data: PublicCreateAppointmentInput) {
+  logger.info(
+    {
+      serviceId: data.serviceId,
+      startAt: data.startAt,
+      hasTherapistId: Boolean(data.therapistId),
+    },
+    'createPublicAppointment: start'
+  );
+
   const service = await appointmentsRepository.findByServiceId(data.serviceId);
   if (!service) {
     throw new NotFoundError('Servicio no encontrado');
@@ -470,8 +576,10 @@ export async function createPublicAppointment(data: PublicCreateAppointmentInput
     throw new InternalServerError('Error al crear la cita');
   }
 
+  /*
   await sendClientAppointmentConfirmation(appointment);
   await sendKumelenAppointmentConfirmation(appointment);
+*/
 
   return sanitizeAppointment(appointment);
 }

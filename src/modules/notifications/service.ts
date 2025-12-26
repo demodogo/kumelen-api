@@ -7,13 +7,15 @@ import { formatDate, formatTime } from './utils.js';
 
 export function createMailTransporter() {
   return nodemailer.createTransport({
-    host: process.env.GMAIL_SMTP_HOST,
-    port: process.env.GMAIL_SMTP_PORT,
+    host: 'smtp.gmail.com',
+    port: 465,
     secure: true,
     auth: {
       user: process.env.GMAIL_SMTP_USER,
       pass: process.env.GMAIL_APP_PASSWORD,
     },
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
   } as TransportOptions);
 }
 

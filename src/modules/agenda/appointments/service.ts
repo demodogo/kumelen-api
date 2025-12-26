@@ -256,10 +256,21 @@ export async function findAvailableTherapist(args: {
   endAt: Date;
 }) {
   const { serviceId, startAt, endAt } = args;
-  const dayOfWeek: DayOfWeek = getDayOfWeek(startAt);
 
-  const dayStart = new Date(startAt.getFullYear(), startAt.getMonth(), startAt.getDate());
-  const dayEnd = new Date(startAt.getFullYear(), startAt.getMonth(), startAt.getDate() + 1);
+  // Convertir a hora local de Chile para obtener el día correcto
+  const startAtLocal = new Date(startAt.toLocaleString('en-US', { timeZone: BUSINESS_TIMEZONE }));
+  const dayOfWeek: DayOfWeek = getDayOfWeek(startAtLocal);
+
+  const dayStart = new Date(
+    startAtLocal.getFullYear(),
+    startAtLocal.getMonth(),
+    startAtLocal.getDate()
+  );
+  const dayEnd = new Date(
+    startAtLocal.getFullYear(),
+    startAtLocal.getMonth(),
+    startAtLocal.getDate() + 1
+  );
 
   const therapists = await prisma.therapist.findMany({
     where: {
@@ -279,8 +290,10 @@ export async function findAvailableTherapist(args: {
     },
   });
 
-  const startMin = startAt.getHours() * 60 + startAt.getMinutes();
-  const endMin = endAt.getHours() * 60 + endAt.getMinutes();
+  // Usar hora local para comparar con el horario del terapeuta
+  const startMin = startAtLocal.getHours() * 60 + startAtLocal.getMinutes();
+  const endAtLocal = new Date(endAt.toLocaleString('en-US', { timeZone: BUSINESS_TIMEZONE }));
+  const endMin = endAtLocal.getHours() * 60 + endAtLocal.getMinutes();
 
   for (const t of therapists) {
     if (t.schedule.length === 0) continue;
@@ -289,6 +302,8 @@ export async function findAvailableTherapist(args: {
     const schEnd = Math.min(toMinutes(sch.endTime), DAY_END_MIN);
 
     if (startMin < schStart || endMin > schEnd) continue;
+
+    // Comparar las citas usando las fechas originales UTC
     const conflict = t.appointments.some((apt) => startAt < apt.endAt && endAt > apt.startAt);
     if (!conflict) return t.id;
   }

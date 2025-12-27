@@ -78,7 +78,7 @@ export async function sendKumelenAppointmentConfirmation(appointment: Appointmen
   await sendEmail({
     from: process.env.GMAIL_SMTP_USER!,
     to: process.env.GMAIL_SMTP_USER!,
-    subject: 'Nueva Cita Reservada',
+    subject: 'Nueva Cita Reservada desde la web',
     text,
     html,
   });

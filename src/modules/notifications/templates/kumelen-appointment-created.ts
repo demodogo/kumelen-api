@@ -60,7 +60,7 @@ export function getKumelenAppointmentNotificationTemplate(
 </head>
 <body style="margin:0;padding:0;background:#f6f6f6;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
-  Nueva cita: ${{ serviceName }} • ${{ appointmentDate }} ${{ appointmentTime }} • Cliente: ${{ clientName }}.
+  Nueva cita: ${serviceName} • ${appointmentDate} ${appointmentTime} • Cliente: ${clientName}.
 </div>
 
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6f6f6;">

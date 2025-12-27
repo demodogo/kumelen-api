@@ -148,25 +148,6 @@ export function getClientAppointmentConfirmationTemplate(data: ClientAppointment
                   </div>
                 </td>
               </tr>
-              <tr>
-                <td align="center" style="padding:18px 24px 20px 24px;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0">
-                    <tr>
-                      <td bgcolor="#8e58d8" style="border-radius:12px;">
-                        <a href="${process.env.WEBSITE_BASE_URL || 'https://centrokumelen.cl'}/confirmar/${appointmentId}?action=confirm" target="_blank" style="display:inline-block;padding:12px 18px;font-family:sans-serif;font-size:14px;font-weight:500;color:#ffffff;text-decoration:none;">
-                          Confirmar mi cita
-                        </a>
-                      </td>
-                      <td width="80" style="font-size:0;line-height:0;">&nbsp;</td>
-                      <td bgcolor="#B85948" style="border-radius:12px;">
-                        <a href="${process.env.WEBSITE_BASE_URL || 'https://centrokumelen.cl'}/confirmar/${appointmentId}?action=cancel" target="_blank" style="display:inline-block;padding:12px 18px;font-family:sans-serif;font-size:14px;font-weight:500;color:#ffffff;text-decoration:none;">
-                          Cancelar mi cita
-                        </a>
-                      </td>
-                    </tr>
-                  </table>
-                </td>
-              </tr>
             </table>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#fafafa;border-top:1px solid #eeeeee;">
               <tr>
@@ -174,7 +155,8 @@ export function getClientAppointmentConfirmationTemplate(data: ClientAppointment
                   <div style="font-size:12px;color:#8a8585;line-height:1.6;">
                     Centro Kümelen Antofagasta<br />
                     <a href="https://www.centrokumelen.cl" target="_blank" style="color:#2177d4;text-decoration:underline;">Sitio web</a> •
-                    <a href="mailto:${process.env.GMAIL_SMTP_USER || 'contacto@centrokumelen.cl'}"  style="color:#2177d4;text-decoration:underline;">Contacto</a><br />
+                    <a href="mailto:${process.env.GMAIL_SMTP_USER || 'contacto@centrokumelen.cl'}"  style="color:#2177d4;text-decoration:underline;">Contacto</a>
+                    • <span style="color:#2177d4;">+56 9 3426 4668 </span><br />
                     <span style="color:#b0aaaa;">Correo automático, por favor no responder.</span>
                   </div>
                 </td>

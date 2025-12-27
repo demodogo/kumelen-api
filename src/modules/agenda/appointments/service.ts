@@ -296,7 +296,6 @@ export async function findAvailableTherapist(args: {
     'findAvailableTherapist: start'
   );
 
-  // Convertir a hora local de Chile para obtener el día correcto
   const startAtLocal = new Date(startAt.toLocaleString('en-US', { timeZone: BUSINESS_TIMEZONE }));
   const dayOfWeek: DayOfWeek = getDayOfWeek(startAtLocal);
 
@@ -339,8 +338,6 @@ export async function findAvailableTherapist(args: {
     },
     'findAvailableTherapist: loaded therapists'
   );
-
-  // Usar hora local para comparar con el horario del terapeuta
   const startMin = startAtLocal.getHours() * 60 + startAtLocal.getMinutes();
   const endAtLocal = new Date(endAt.toLocaleString('en-US', { timeZone: BUSINESS_TIMEZONE }));
   const endMin = endAtLocal.getHours() * 60 + endAtLocal.getMinutes();
@@ -364,8 +361,6 @@ export async function findAvailableTherapist(args: {
       discardStats.outOfHours++;
       continue;
     }
-
-    // Comparar las citas usando las fechas originales UTC
     const conflict = t.appointments.some((apt) => startAt < apt.endAt && endAt > apt.startAt);
     if (conflict) {
       discardStats.conflict++;
@@ -576,10 +571,8 @@ export async function createPublicAppointment(data: PublicCreateAppointmentInput
     throw new InternalServerError('Error al crear la cita');
   }
 
-  /*
   await sendClientAppointmentConfirmation(appointment);
   await sendKumelenAppointmentConfirmation(appointment);
-*/
 
   return sanitizeAppointment(appointment);
 }

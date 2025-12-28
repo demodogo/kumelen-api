@@ -34,7 +34,6 @@ export async function getBlogPostBySlug(slug: string) {
 }
 
 export async function createBlogPost(authedId: string, data: CreateBlogPostInput) {
-  console.log('DAta service', data);
   const existingSlug = await blogRepository.findBySlug(data.slug);
   if (existingSlug) {
     throw new ConflictError('Blog post ');
